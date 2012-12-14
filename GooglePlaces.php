@@ -4,6 +4,8 @@ class GooglePlaces
 {
 	private $key      = '';
 	private $base_url = 'https://maps.googleapis.com/maps/api/place';
+	private $method   = null;
+	private $response = null;
 
 	public $keyword   = null;
 	public $language  = 'en';
@@ -28,9 +30,37 @@ class GooglePlaces
 		$this->$variable = $value;
 	}
 
+	public function next($token)
+	{
+		if ($token)
+		{
+			$this->pagetoken = $token;
+		}
+		elseif (isset($this->response['next_page_token']))
+		{
+			$this->pagetoken = $this->response['next_page_token'];
+		}
+		else
+		{
+			throw new Exception('Previous call did not return a next_page_token and you didn\'t supply one. What did you expect?');
+		}
+
+		if ($method === null)
+		{
+			throw new Exception('You cannot call next() before making a call.');
+		}
+
+		$this->$method();
+	}
+
 	public function __call($method, $arguments)
 	{
-		$method = strtolower($method);
+		if (count($arguments) > 0)
+		{
+			$this->pagetoken = $arguments[0];
+		}
+
+		$method = $this->method = strtolower($method);
 		$url    = implode('/', array($this->base_url, $method, $this->output));
 
 		$parameters = array();
@@ -39,7 +69,7 @@ class GooglePlaces
 		foreach (get_object_vars($this) as $variable => $value)
 		{
 			// Except these variables
-			if (!in_array($variable, array('base_url', 'output')))
+			if (!in_array($variable, array('base_url', 'method', 'output', 'response')))
 			{
 				// Assuming it's not null
 				if ($value !== null)
@@ -59,6 +89,16 @@ class GooglePlaces
 								// Just in case it's an associative array
 								$value = array_values($value);
 								$value = $value[0] . ',' . $value[1];
+							}
+							break;
+
+						// Checks that the output is value
+						case 'output':
+							$value = strtolower($value);
+
+							if (!in_array($value, array('json', 'xml')))
+							{
+								throw new Exception('Invalid output, please specify either "json" or "xml".');
 							}
 							break;
 
@@ -91,27 +131,39 @@ class GooglePlaces
 			case 'nearbysearch':
 				if (!isset($parameters['location']))
 				{
-					throw new Exception('You must specify a location before calling nearbysearch.');
+					throw new Exception('You must specify a location before calling nearbysearch().');
 				}
 				elseif (isset($parameters['rankby']))
 				{
-					if ($parameters['rankby'] == 'distance')
+					switch ($parameters['rankby'])
 					{
-						if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
-						{
-							throw new Exception('You much specify at least one of the following: keyword, name, types.');
-						}
+						case 'distance':
+							if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
+							{
+								throw new Exception('You much specify at least one of the following: keyword, name, types.');
+							}
 
-						if (isset($parameters['radius']))
-						{
-							unset($parameters['radius']);
-						}
+							if (isset($parameters['radius']))
+							{
+								unset($parameters['radius']);
+							}
+
+							break;
+
+						case 'prominence':
+							if (!isset($parameters['radius']))
+							{
+								throw new Exception('You must specify a radius.');
+							}
+
+							break;
 					}
 				}
 
 				break;
 		}
 
+		// Couldn't seem to get http_build_query() to work right so...
 		$querystring = '';
 
 		foreach ($parameters as $variable => $value)
@@ -123,8 +175,6 @@ class GooglePlaces
 
 			$querystring .= $variable . '=' . $value;
 		}
-
-		echo $url . '?' . $querystring;
 
 		$curl = curl_init();
 
@@ -139,10 +189,35 @@ class GooglePlaces
 
 		$response = curl_exec($curl);
 
-		var_dump($response, curl_error($curl));
+		if ($error = curl_error($curl))
+		{
+			throw new Exception('CURL Error: ' . $error);
+		}
+
+		if ($this->output == 'json')
+		{
+			$response = json_decode($response, true);
+
+			if ($response === null)
+			{
+				throw new Exception('The returned JSON was malformed or nonexistent.');
+			}
+		}
+		else
+		{
+			throw new Exception('XML is terrible, don\'t use it, ever.');
+		}
+
 		curl_close($curl);
 
-		exit;
+		$this->response = $response;
+
+		if ($this->pagetoken !== null)
+		{
+			$this->pagetoken = null;
+		}
+
+		return $this->response;
 	}
 
 	// @todo Method to sanity check passed types
