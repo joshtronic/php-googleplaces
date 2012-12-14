@@ -30,47 +30,24 @@ class GooglePlaces
 		$this->$variable = $value;
 	}
 
-	public function next($token)
-	{
-		if ($token)
-		{
-			$this->pagetoken = $token;
-		}
-		elseif (isset($this->response['next_page_token']))
-		{
-			$this->pagetoken = $this->response['next_page_token'];
-		}
-		else
-		{
-			throw new Exception('Previous call did not return a next_page_token and you didn\'t supply one. What did you expect?');
-		}
-
-		if ($method === null)
-		{
-			throw new Exception('You cannot call next() before making a call.');
-		}
-
-		$this->$method();
-	}
-
 	public function __call($method, $arguments)
 	{
-		if (count($arguments) > 0)
-		{
-			$this->pagetoken = $arguments[0];
-		}
-
-		$method = $this->method = strtolower($method);
-		$url    = implode('/', array($this->base_url, $method, $this->output));
-
+		$method     = $this->method = strtolower($method);
+		$url        = implode('/', array($this->base_url, $method, $this->output));
 		$parameters = array();
 
 		// Loops through all of our variables to make a parameter list
 		foreach (get_object_vars($this) as $variable => $value)
 		{
 			// Except these variables
-			if (!in_array($variable, array('base_url', 'method', 'output', 'response')))
+			if (!in_array($variable, array('base_url', 'method', 'output', 'pagetoken', 'response')))
 			{
+				// Google lied, all other parameters aren't ignored, they need to be suppressed
+				if ($this->pagetoken !== null)
+				{
+					$this->$variable == null;
+				}
+
 				// Assuming it's not null
 				if ($value !== null)
 				{
@@ -126,41 +103,44 @@ class GooglePlaces
 			}
 		}
 
-		switch ($method)
+		if (!isset($parameters['pagetoken']))
 		{
-			case 'nearbysearch':
-				if (!isset($parameters['location']))
-				{
-					throw new Exception('You must specify a location before calling nearbysearch().');
-				}
-				elseif (isset($parameters['rankby']))
-				{
-					switch ($parameters['rankby'])
+			switch ($method)
+			{
+				case 'nearbysearch':
+					if (!isset($parameters['location']))
 					{
-						case 'distance':
-							if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
-							{
-								throw new Exception('You much specify at least one of the following: keyword, name, types.');
-							}
-
-							if (isset($parameters['radius']))
-							{
-								unset($parameters['radius']);
-							}
-
-							break;
-
-						case 'prominence':
-							if (!isset($parameters['radius']))
-							{
-								throw new Exception('You must specify a radius.');
-							}
-
-							break;
+						throw new Exception('You must specify a location before calling nearbysearch().');
 					}
-				}
+					elseif (isset($parameters['rankby']))
+					{
+						switch ($parameters['rankby'])
+						{
+							case 'distance':
+								if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
+								{
+									throw new Exception('You much specify at least one of the following: keyword, name, types.');
+								}
 
-				break;
+								if (isset($parameters['radius']))
+								{
+									unset($parameters['radius']);
+								}
+
+								break;
+
+							case 'prominence':
+								if (!isset($parameters['radius']))
+								{
+									throw new Exception('You must specify a radius.');
+								}
+
+								break;
+						}
+					}
+
+					break;
+			}
 		}
 
 		// Couldn't seem to get http_build_query() to work right so...
@@ -211,11 +191,6 @@ class GooglePlaces
 		curl_close($curl);
 
 		$this->response = $response;
-
-		if ($this->pagetoken !== null)
-		{
-			$this->pagetoken = null;
-		}
 
 		return $this->response;
 	}
