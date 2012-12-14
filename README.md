@@ -19,7 +19,7 @@ Usage Examples
 
 ```php
 require_once 'GooglePlaces.php';
-$google_places = new GooglePlaces('_YOUR_API_KEY');
+$google_places = new GooglePlaces('_YOUR_API_KEY_');
 ```
 
 ### Search nearby, ranked by prominence
@@ -37,6 +37,13 @@ $google_places->location = array(-33.86820, 151.1945860);
 $google_places->rankby   = 'distance';
 $google_places->types    = 'restaurant'; // Requires keyword, name or types
 $results                 = $google_places->searchNearby();
+```
+
+### Second page of search nearby results
+
+```php
+$google_plages->pageToken = $results['next_page_token'];
+$page2_results            = $google_places->searchNearby();
 ```
 
 The Fututre
