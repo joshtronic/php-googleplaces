@@ -27,7 +27,7 @@ $google_places = new GooglePlaces('_YOUR_API_KEY_');
 ```php
 $google_places->location = array(-33.86820, 151.1945860);
 $google_places->radius   = 800;
-$results                 = $google_places->searchNearby();
+$results                 = $google_places->nearbySearch();
 ```
 
 ### Search nearby, ranked by distance
@@ -36,14 +36,14 @@ $results                 = $google_places->searchNearby();
 $google_places->location = array(-33.86820, 151.1945860);
 $google_places->rankby   = 'distance';
 $google_places->types    = 'restaurant'; // Requires keyword, name or types
-$results                 = $google_places->searchNearby();
+$results                 = $google_places->nearbySearch();
 ```
 
 ### Second page of search nearby results
 
 ```php
 $google_places->pageToken = $results['next_page_token'];
-$page2_results            = $google_places->searchNearby();
+$page2_results            = $google_places->nearbySearch();
 ```
 
 The Fututre
