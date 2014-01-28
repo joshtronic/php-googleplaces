@@ -46,6 +46,22 @@ $google_places->pageToken = $results['next_page_token'];
 $page2_results            = $google_places->nearbySearch();
 ```
 
+### Radar search
+
+```php
+$google_places->location = array(-33.86820, 151.1945860);
+$google_places->radius   = 800;
+$google_places->types    = 'restaurant'; // Requires keyword, name or types
+$results                 = $google_places->radarSearch();
+```
+
+### Place details
+
+```php
+$google_places->reference = '#reference#'; // Reference from search results
+$details                  = $google_places->details();
+```
+
 The Fututre
 -----------
 
