@@ -17,6 +17,8 @@ class GooglePlaces
 	public $rankby    = 'prominence';
 	public $sensor    = false;
 	public $types     = null;
+	public $reference = null;
+	public $opennow   = null;
 
 	public function __construct($key)
 	{
@@ -137,6 +139,40 @@ class GooglePlaces
 
 								break;
 						}
+					}
+
+					break;
+
+				case 'radarsearch':
+					if (!isset($parameters['location']))
+					{
+						throw new Exception('You must specify a location before calling nearbysearch().');
+					}
+					elseif (!isset($parameters['radius']))
+					{
+						throw new Exception('You must specify a radius.');
+					}
+					elseif (empty($parameters['keyword']) && empty($parameters['name']) && empty($parameters['types']))
+					{
+						throw new Exception('A Radar Search request must include at least one of keyword, name, or types.');
+					}
+
+					if (isset($parameters['rankby']))
+					{
+						unset($parameters['rankby']);
+					}
+
+					break;
+
+				case 'details':
+					if (!isset($parameters['reference']))
+					{
+						throw new Exception('You must specify a reference before calling details().');
+					}
+
+					if (isset($parameters['rankby']))
+					{
+						unset($parameters['rankby']);
 					}
 
 					break;
