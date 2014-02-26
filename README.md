@@ -42,7 +42,7 @@ $results                 = $google_places->nearbySearch();
 ### Second page of search nearby results
 
 ```php
-$google_places->pageToken = $results['next_page_token'];
+$google_places->pagetoken = $results['next_page_token'];
 $page2_results            = $google_places->nearbySearch();
 ```
 
