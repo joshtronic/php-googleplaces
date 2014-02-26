@@ -44,12 +44,6 @@ class GooglePlaces
 			// Except these variables
 			if (!in_array($variable, array('base_url', 'method', 'output', 'pagetoken', 'response')))
 			{
-				// Google lied, all other parameters aren't ignored, they need to be suppressed
-				if ($this->pagetoken !== null)
-				{
-					$this->$variable == null;
-				}
-
 				// Assuming it's not null
 				if ($value !== null)
 				{
@@ -177,6 +171,12 @@ class GooglePlaces
 
 					break;
 			}
+		}
+
+		if ($this->pagetoken !== null)
+		{
+			$parameters['pagetoken'] = $this->pagetoken;
+			sleep(3);
 		}
 
 		// Couldn't seem to get http_build_query() to work right so...
