@@ -252,6 +252,21 @@ class GooglePlaces
 
 		return $this->response;
 	}
+
+	/**
+	 * Returns the longitude equal to a given distance (kilometers) at a given latitude
+	 */
+	public function km2lng($km,$latitude){
+	    return $km/(cos(deg2rad($latitude))*40075.16/360);
+	}
+
+	/**
+	 * Returns the latitude equal to a given distance (kilometers)
+	 */
+	public function km2lat($km){      
+	    return $km/(40075.16/360);
+	}
+
 }
 
 ?>
