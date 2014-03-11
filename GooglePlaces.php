@@ -38,7 +38,16 @@ class GooglePlaces
 		$url        = implode('/', array($this->base_url, $method, $this->output));
 		$parameters = array();
 
-		// Loops through all of our variables to make a parameter list
+		$parameters = $this->parameterBuilder($parameters);
+		$parameters = $this->methodChecker($parameters, $method);
+
+		return $this->queryGoogle($url, $parameters);		
+	}
+
+	/**
+	 * Loops through all of our variables to make a parameter list
+	 */
+	private function parameterBuilder($parameters){
 		foreach (get_object_vars($this) as $variable => $value)
 		{
 			// Except these variables
@@ -98,7 +107,14 @@ class GooglePlaces
 				}
 			}
 		}
+		return $parameters;
+	}
 
+	/**
+	 * takes the parameters and method to throw exceptions or modify parameters as needed
+	 * @todo Method to sanity check passed types
+	 */
+	private function methodChecker($parameters, $method){
 		if (!isset($parameters['pagetoken']))
 		{
 			switch ($method)
@@ -172,7 +188,13 @@ class GooglePlaces
 					break;
 			}
 		}
+		return $parameters;
+	}
 
+	/**
+	 * Submits request via curl, sets the response, then returns the response
+	 */
+	private function queryGoogle($url, $parameters){
 		if ($this->pagetoken !== null)
 		{
 			$parameters['pagetoken'] = $this->pagetoken;
@@ -230,8 +252,6 @@ class GooglePlaces
 
 		return $this->response;
 	}
-
-	// @todo Method to sanity check passed types
 }
 
 ?>
