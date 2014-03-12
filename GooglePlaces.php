@@ -20,6 +20,10 @@ class GooglePlaces
 	public $reference = null;
 	public $opennow   = null;
 
+	public $subradius = null;
+	public $getmax    = true;
+	private $grid     = null;
+
 	public function __construct($key)
 	{
 		$this->key = $key;
@@ -41,6 +45,9 @@ class GooglePlaces
 		$parameters = $this->parameterBuilder($parameters);
 		$parameters = $this->methodChecker($parameters, $method);
 
+		if (!empty($this->subradius)) {
+			return $this->subdivide($url, $parameters);
+		}
 		return $this->queryGoogle($url, $parameters);		
 	}
 
@@ -51,7 +58,7 @@ class GooglePlaces
 		foreach (get_object_vars($this) as $variable => $value)
 		{
 			// Except these variables
-			if (!in_array($variable, array('base_url', 'method', 'output', 'pagetoken', 'response')))
+			if (!in_array($variable, array('base_url', 'method', 'output', 'pagetoken', 'response', 'subradius', 'getmax','grid')))
 			{
 				// Assuming it's not null
 				if ($value !== null)
@@ -252,6 +259,57 @@ class GooglePlaces
 
 		return $this->response;
 	}
+
+	/**
+	 * Returns the longitude equal to a given distance (meters) at a given latitude
+	 */
+	public function meters2lng($meters,$latitude){
+	    return $meters/(cos(deg2rad($latitude))*40075160/360);
+	}
+
+	/**
+	 * Returns the latitude equal to a given distance (meters)
+	 */
+	public function meters2lat($meters){      
+	    return $meters/(40075160/360);
+	}
+
+	/**
+	 * Returns the aggregated responses for a subdivided search
+	 */
+	private function subdivide($url, $parameters){    
+		if (($this->radius % $this->subradius) || ($this->subradius < 200) || (($this->radius/$this->subradius)%2)) {
+		   	throw new Exception('Subradius should divide evenly into radius.  Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid.  NOT 2000/16 = 125x125 grid)');
+		}   
+		$center = explode(',', $this->location);
+		$centerlat = $center[0];
+		$centerlng = $center[1];
+		$count = $this->radius / $this->subradius;
+		$lati = $this->meters2lat($this->subradius*2);
+		$this->grid['results'] = array();
+		for ($i=$count/2*-1; $i <= $count/2; $i++) { 
+			$lat = $centerlat + $i*$lati;
+			$lngi = $this->meters2lng($this->subradius*2,$lat);
+			for ($j=$count/2*-1; $j <= $count/2; $j++) { 
+				$lng = $centerlng + $j*$lngi;
+				$loc = $lat . ',' . $lng;
+				$parameters['location'] = $loc;
+				$parameters['radius'] = $this->subradius;
+				$this->queryGoogle($url, $parameters);
+				$this->grid[$i][$j] = $this->response;
+				$this->grid['results'] = array_merge($this->grid['results'],$this->response['results']);
+				while ($this->response['next_page_token']) {
+					$this->pagetoken = $this->response['next_page_token'];
+					$this->queryGoogle($url, $parameters);
+					$this->grid[$i][$j] = array_merge($this->grid[$i][$j],$this->response);
+					$this->grid['results'] = array_merge($this->grid['results'],$this->response['results']);
+					$this->pagetoken = null;
+				}
+			}
+		}
+		return $this->grid;
+	}
+
 }
 
 ?>
