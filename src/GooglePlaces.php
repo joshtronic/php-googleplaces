@@ -90,7 +90,7 @@ class GooglePlaces
 
 							if (!in_array($value, array('json', 'xml')))
 							{
-								throw new Exception('Invalid output, please specify either "json" or "xml".');
+								throw new \Exception('Invalid output, please specify either "json" or "xml".');
 							}
 							break;
 
@@ -100,7 +100,7 @@ class GooglePlaces
 
 							if (!in_array($value, array('prominence', 'distance')))
 							{
-								throw new Exception('Invalid rank by value, please specify either "prominence" or "distance".');
+								throw new \Exception('Invalid rank by value, please specify either "prominence" or "distance".');
 							}
 							break;
 
@@ -133,7 +133,7 @@ class GooglePlaces
 				case 'nearbysearch':
 					if (!isset($parameters['location']))
 					{
-						throw new Exception('You must specify a location before calling nearbysearch().');
+						throw new \Exception('You must specify a location before calling nearbysearch().');
 					}
 					elseif (isset($parameters['rankby']))
 					{
@@ -142,7 +142,7 @@ class GooglePlaces
 							case 'distance':
 								if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
 								{
-									throw new Exception('You much specify at least one of the following: keyword, name, types.');
+									throw new \Exception('You much specify at least one of the following: keyword, name, types.');
 								}
 
 								if (isset($parameters['radius']))
@@ -154,7 +154,7 @@ class GooglePlaces
 							case 'prominence':
 								if (!isset($parameters['radius']))
 								{
-									throw new Exception('You must specify a radius.');
+									throw new \Exception('You must specify a radius.');
 								}
 								break;
 						}
@@ -165,15 +165,15 @@ class GooglePlaces
 				case 'radarsearch':
 					if (!isset($parameters['location']))
 					{
-						throw new Exception('You must specify a location before calling nearbysearch().');
+						throw new \Exception('You must specify a location before calling nearbysearch().');
 					}
 					elseif (!isset($parameters['radius']))
 					{
-						throw new Exception('You must specify a radius.');
+						throw new \Exception('You must specify a radius.');
 					}
 					elseif (empty($parameters['keyword']) && empty($parameters['name']) && empty($parameters['types']))
 					{
-						throw new Exception('A Radar Search request must include at least one of keyword, name, or types.');
+						throw new \Exception('A Radar Search request must include at least one of keyword, name, or types.');
 					}
 
 					if (isset($parameters['rankby']))
@@ -186,7 +186,7 @@ class GooglePlaces
 				case 'details':
 					if (!isset($parameters['reference']))
 					{
-						throw new Exception('You must specify a reference before calling details().');
+						throw new \Exception('You must specify a reference before calling details().');
 					}
 
 					if (isset($parameters['rankby']))
@@ -239,7 +239,7 @@ class GooglePlaces
 
 		if ($error = curl_error($curl))
 		{
-			throw new Exception('CURL Error: ' . $error);
+			throw new \Exception('CURL Error: ' . $error);
 		}
 
 		if ($this->output == 'json')
@@ -248,12 +248,12 @@ class GooglePlaces
 
 			if ($response === null)
 			{
-				throw new Exception('The returned JSON was malformed or nonexistent.');
+				throw new \Exception('The returned JSON was malformed or nonexistent.');
 			}
 		}
 		else
 		{
-			throw new Exception('XML is terrible, don\'t use it, ever.');
+			throw new \Exception('XML is terrible, don\'t use it, ever.');
 		}
 
 		curl_close($curl);
@@ -286,7 +286,7 @@ class GooglePlaces
 	{
 		if (($this->radius % $this->subradius) || ($this->subradius < 200) || (($this->radius / $this->subradius) % 2))
 		{
-		   	throw new Exception('Subradius should divide evenly into radius. Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)');
+		   	throw new \Exception('Subradius should divide evenly into radius. Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)');
 		}
 
 		$center    = explode(',', $this->location);
