@@ -1,14 +1,16 @@
 {
-	"name":        "joshtronic/php-googleplaces",
-	"description": "PHP Wrapper for the Google Places API ",
+	"name":        "joshtronic/php-loremipsum",
+	"description": "PHP Wrapper for the Google Places API",
 	"license":     "MIT",
-	"authors": [
-		{
-			"name": "Joshua Sherman",
-			"email": "josh@gravityblvd.com"
-		}
-	],
+	"authors": [{
+		"name":     "Josh Sherman",
+		"email":    "josh@gravityblvd.com",
+		"homepage": "https://github.com/joshtronic/php-googleplaces"
+	}],
 	"autoload": {
-		"classmap": ["GooglePlaces.php"]
+		"classmap": ["src/"]
+	},
+	"require-dev": {
+		"satooshi/php-coveralls": "dev-master"
 	}
 }

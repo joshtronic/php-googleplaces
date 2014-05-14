@@ -1,5 +1,7 @@
 <?php
 
+namespace joshtronic;
+
 class GooglePlaces
 {
 	private $key      = '';
@@ -48,13 +50,14 @@ class GooglePlaces
 		if (!empty($this->subradius)) {
 			return $this->subdivide($url, $parameters);
 		}
-		return $this->queryGoogle($url, $parameters);		
+		return $this->queryGoogle($url, $parameters);
 	}
 
 	/**
 	 * Loops through all of our variables to make a parameter list
 	 */
-	private function parameterBuilder($parameters){
+	private function parameterBuilder($parameters)
+	{
 		foreach (get_object_vars($this) as $variable => $value)
 		{
 			// Except these variables
@@ -121,7 +124,8 @@ class GooglePlaces
 	 * takes the parameters and method to throw exceptions or modify parameters as needed
 	 * @todo Method to sanity check passed types
 	 */
-	private function methodChecker($parameters, $method){
+	private function methodChecker($parameters, $method)
+	{
 		if (!isset($parameters['pagetoken']))
 		{
 			switch ($method)
@@ -145,7 +149,6 @@ class GooglePlaces
 								{
 									unset($parameters['radius']);
 								}
-
 								break;
 
 							case 'prominence':
@@ -153,7 +156,6 @@ class GooglePlaces
 								{
 									throw new Exception('You must specify a radius.');
 								}
-
 								break;
 						}
 					}
@@ -201,7 +203,8 @@ class GooglePlaces
 	/**
 	 * Submits request via curl, sets the response, then returns the response
 	 */
-	private function queryGoogle($url, $parameters){
+	private function queryGoogle($url, $parameters)
+	{
 		if ($this->pagetoken !== null)
 		{
 			$parameters['pagetoken'] = $this->pagetoken;
@@ -263,53 +266,70 @@ class GooglePlaces
 	/**
 	 * Returns the longitude equal to a given distance (meters) at a given latitude
 	 */
-	public function meters2lng($meters,$latitude){
-	    return $meters/(cos(deg2rad($latitude))*40075160/360);
+	public function meters2lng($meters, $latitude)
+	{
+	    return $meters / (cos(deg2rad($latitude)) * 40075160 / 360);
 	}
 
 	/**
 	 * Returns the latitude equal to a given distance (meters)
 	 */
-	public function meters2lat($meters){      
-	    return $meters/(40075160/360);
+	public function meters2lat($meters)
+	{
+	    return $meters / (40075160 / 360);
 	}
 
 	/**
 	 * Returns the aggregated responses for a subdivided search
 	 */
-	private function subdivide($url, $parameters){    
-		if (($this->radius % $this->subradius) || ($this->subradius < 200) || (($this->radius/$this->subradius)%2)) {
-		   	throw new Exception('Subradius should divide evenly into radius.  Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid.  NOT 2000/16 = 125x125 grid)');
-		}   
-		$center = explode(',', $this->location);
+	private function subdivide($url, $parameters)
+	{
+		if (($this->radius % $this->subradius) || ($this->subradius < 200) || (($this->radius / $this->subradius) % 2))
+		{
+		   	throw new Exception('Subradius should divide evenly into radius. Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)');
+		}
+
+		$center    = explode(',', $this->location);
 		$centerlat = $center[0];
 		$centerlng = $center[1];
-		$count = $this->radius / $this->subradius;
-		$lati = $this->meters2lat($this->subradius*2);
+		$count     = $this->radius / $this->subradius;
+		$lati      = $this->meters2lat($this->subradius * 2);
+
 		$this->grid['results'] = array();
-		for ($i=$count/2*-1; $i <= $count/2; $i++) { 
-			$lat = $centerlat + $i*$lati;
-			$lngi = $this->meters2lng($this->subradius*2,$lat);
-			for ($j=$count/2*-1; $j <= $count/2; $j++) { 
-				$lng = $centerlng + $j*$lngi;
+
+		for ($i = $count / 2 * -1; $i <= $count / 2; $i++)
+		{
+			$lat  = $centerlat + $i * $lati;
+			$lngi = $this->meters2lng($this->subradius * 2, $lat);
+
+			for ($j = $count / 2 * -1; $j <= $count / 2; $j++)
+			{
+				$lng = $centerlng + $j * $lngi;
 				$loc = $lat . ',' . $lng;
+
 				$parameters['location'] = $loc;
-				$parameters['radius'] = $this->subradius;
+				$parameters['radius']   = $this->subradius;
+
 				$this->queryGoogle($url, $parameters);
-				$this->grid[$i][$j] = $this->response;
-				$this->grid['results'] = array_merge($this->grid['results'],$this->response['results']);
-				while ($this->response['next_page_token']) {
+
+				$this->grid[$i][$j]    = $this->response;
+				$this->grid['results'] = array_merge($this->grid['results'], $this->response['results']);
+
+				while ($this->response['next_page_token'])
+				{
 					$this->pagetoken = $this->response['next_page_token'];
+
 					$this->queryGoogle($url, $parameters);
-					$this->grid[$i][$j] = array_merge($this->grid[$i][$j],$this->response);
-					$this->grid['results'] = array_merge($this->grid['results'],$this->response['results']);
-					$this->pagetoken = null;
+
+					$this->grid[$i][$j]    = array_merge($this->grid[$i][$j], $this->response);
+					$this->grid['results'] = array_merge($this->grid['results'], $this->response['results']);
+					$this->pagetoken       = null;
 				}
 			}
 		}
+
 		return $this->grid;
 	}
-
 }
 
 ?>
