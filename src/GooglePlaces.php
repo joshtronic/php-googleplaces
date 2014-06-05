@@ -2,6 +2,9 @@
 
 namespace joshtronic;
 
+/**
+ * GooglePlaces PHP wrapper
+ */
 class GooglePlaces
 {
     private $key = '';
@@ -26,11 +29,20 @@ class GooglePlaces
     public $getmax = true;
     private $grid = null;
 
+    /**
+     * Constructor.
+     *
+     * @param $key
+     */
     public function __construct($key)
     {
         $this->key = $key;
     }
 
+    /**
+     * @param $variable
+     * @param $value
+     */
     function __set($variable, $value)
     {
         // Compensates for mixed variable naming
@@ -38,6 +50,11 @@ class GooglePlaces
         $this->$variable = $value;
     }
 
+    /**
+     * @param $method
+     * @param $arguments
+     * @return mixed|null
+     */
     public function __call($method, $arguments)
     {
         $method = $this->method = strtolower($method);
@@ -53,8 +70,13 @@ class GooglePlaces
         return $this->queryGoogle($url, $parameters);
     }
 
+
     /**
      * Loops through all of our variables to make a parameter list
+     *
+     * @param $parameters
+     * @return mixed
+     * @throws \Exception
      */
     private function parameterBuilder($parameters)
     {
@@ -114,9 +136,15 @@ class GooglePlaces
         return $parameters;
     }
 
+
     /**
-     * takes the parameters and method to throw exceptions or modify parameters as needed
+     * Takes the parameters and method to throw exceptions or modify parameters as needed
      * @todo Method to sanity check passed types
+     *
+     * @param $parameters
+     * @param $method
+     * @return mixed
+     * @throws \Exception
      */
     private function methodChecker($parameters, $method)
     {
@@ -129,8 +157,7 @@ class GooglePlaces
                         switch ($parameters['rankby']) {
                             case 'distance':
                                 if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types'])) {
-                                    throw new \Exception('You much specify at least one of the following: keyword, name, types.'
-                                    );
+                                    throw new \Exception('You much specify at least one of the following: keyword, name, types.');
                                 }
 
                                 if (isset($parameters['radius'])) {
@@ -181,6 +208,11 @@ class GooglePlaces
 
     /**
      * Submits request via curl, sets the response, then returns the response
+     *
+     * @param $url
+     * @param $parameters
+     * @return mixed
+     * @throws \Exception
      */
     private function queryGoogle($url, $parameters)
     {
@@ -236,6 +268,10 @@ class GooglePlaces
 
     /**
      * Returns the longitude equal to a given distance (meters) at a given latitude
+     *
+     * @param $meters
+     * @param $latitude
+     * @return float
      */
     public function meters2lng($meters, $latitude)
     {
@@ -244,6 +280,9 @@ class GooglePlaces
 
     /**
      * Returns the latitude equal to a given distance (meters)
+     *
+     * @param $meters
+     * @return float
      */
     public function meters2lat($meters)
     {
@@ -252,6 +291,11 @@ class GooglePlaces
 
     /**
      * Returns the aggregated responses for a subdivided search
+     *
+     * @param $url
+     * @param $parameters
+     * @return null
+     * @throws \Exception
      */
     private function subdivide($url, $parameters)
     {
