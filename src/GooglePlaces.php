@@ -184,9 +184,9 @@ class GooglePlaces
 					break;
 
 				case 'details':
-					if (!isset($parameters['reference']))
+					if(!(isset($parameters['reference']) ^ isset($parameters['placeid'])))
 					{
-						throw new \Exception('You must specify a reference before calling details().');
+						throw new \Exception('You must specify either a placeid or a reference (but not both) before calling details().');						
 					}
 
 					if (isset($parameters['rankby']))
