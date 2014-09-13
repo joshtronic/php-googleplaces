@@ -46,7 +46,6 @@ Then run `composer update`
 ### Getting started
 
 ```php
-require_once 'joshtronic/GooglePlaces.php';
 $google_places = new joshtronic\GooglePlaces('_YOUR_API_KEY_');
 ```
 
