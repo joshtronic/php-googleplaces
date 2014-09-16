@@ -4,32 +4,39 @@ namespace joshtronic;
 
 class GooglePlaces
 {
-    private $key      = '';
-    private $base_url = 'https://maps.googleapis.com/maps/api/place';
-    private $method   = null;
-    private $response = null;
+    private $key       = '';
+    private $client    = '';
+    private $base_url  = 'https://maps.googleapis.com/maps/api/place';
+    private $method    = null;
+    private $response  = null;
 
-    public $keyword   = null;
-    public $language  = 'en';
-    public $location  = null;
-    public $output    = 'json';
-    public $name      = null;
-    public $pagetoken = null;
-    public $radius    = null;
-    public $rankby    = 'prominence';
-    public $sensor    = false;
-    public $types     = null;
-    public $placeid   = null;
-    public $reference = null;
-    public $opennow   = null;
+    public  $keyword   = null;
+    public  $language  = 'en';
+    public  $location  = null;
+    public  $output    = 'json';
+    public  $name      = null;
+    public  $pagetoken = null;
+    public  $radius    = null;
+    public  $rankby    = 'prominence';
+    public  $sensor    = false;
+    public  $types     = null;
+    public  $placeid   = null;
+    public  $reference = null;
+    public  $opennow   = null;
 
-    public $subradius = null;
-    public $getmax    = true;
-    private $grid     = null;
+    public  $subradius = null;
+    public  $getmax    = true;
+    private $grid      = null;
 
-    public function __construct($key)
+    private $exceptions = array(
+        'base_url', 'client', 'exceptions', 'getmax', 'grid', 'method',
+        'output', 'pagetoken', 'response', 'subradius',
+    );
+
+    public function __construct($key, $client = false)
     {
-        $this->key = $key;
+        $this->key    = $key;
+        $this->client = $client ? $client : new GooglePlacesClient();
     }
 
     function __set($variable, $value)
@@ -44,13 +51,19 @@ class GooglePlaces
         $method     = $this->method = strtolower($method);
         $url        = implode('/', array($this->base_url, $method, $this->output));
         $parameters = array();
-
         $parameters = $this->parameterBuilder($parameters);
         $parameters = $this->methodChecker($parameters, $method);
 
-        if (!empty($this->subradius)) {
+        if (!empty($this->subradius))
+        {
             return $this->subdivide($url, $parameters);
         }
+
+        if ($this->pagetoken !== null)
+        {
+            $parameters['pagetoken'] = $this->pagetoken;
+        }
+
         return $this->queryGoogle($url, $parameters);
     }
 
@@ -62,7 +75,7 @@ class GooglePlaces
         foreach (get_object_vars($this) as $variable => $value)
         {
             // Except these variables
-            if (!in_array($variable, array('base_url', 'method', 'output', 'pagetoken', 'response', 'subradius', 'getmax','grid')))
+            if (!in_array($variable, $this->exceptions))
             {
                 // Assuming it's not null
                 if ($value !== null)
@@ -91,7 +104,10 @@ class GooglePlaces
 
                             if (!in_array($value, array('json', 'xml')))
                             {
-                                throw new \Exception('Invalid output, please specify either "json" or "xml".');
+                                throw new \Exception('
+                                    Invalid output, please specify either
+                                    "json" or "xml".
+                                ');
                             }
                             break;
 
@@ -101,7 +117,10 @@ class GooglePlaces
 
                             if (!in_array($value, array('prominence', 'distance')))
                             {
-                                throw new \Exception('Invalid rank by value, please specify either "prominence" or "distance".');
+                                throw new \Exception('
+                                    Invalid rank by value, please specify
+                                    either "prominence" or "distance".
+                                ');
                             }
                             break;
 
@@ -134,16 +153,24 @@ class GooglePlaces
                 case 'nearbysearch':
                     if (!isset($parameters['location']))
                     {
-                        throw new \Exception('You must specify a location before calling nearbysearch().');
+                        throw new \Exception('
+                            You must specify a location before calling
+                            nearbysearch().
+                        ');
                     }
                     elseif (isset($parameters['rankby']))
                     {
                         switch ($parameters['rankby'])
                         {
                             case 'distance':
-                                if (!isset($parameters['keyword']) && !isset($parameters['name']) && !isset($parameters['types']))
+                                if (!isset($parameters['keyword'])
+                                    && !isset($parameters['name'])
+                                    && !isset($parameters['types']))
                                 {
-                                    throw new \Exception('You much specify at least one of the following: keyword, name, types.');
+                                    throw new \Exception('
+                                        You much specify at least one of the
+                                        following: keyword, name, types.
+                                    ');
                                 }
 
                                 if (isset($parameters['radius']))
@@ -155,7 +182,9 @@ class GooglePlaces
                             case 'prominence':
                                 if (!isset($parameters['radius']))
                                 {
-                                    throw new \Exception('You must specify a radius.');
+                                    throw new \Exception('
+                                        You must specify a radius.
+                                    ');
                                 }
                                 break;
                         }
@@ -166,15 +195,23 @@ class GooglePlaces
                 case 'radarsearch':
                     if (!isset($parameters['location']))
                     {
-                        throw new \Exception('You must specify a location before calling nearbysearch().');
+                        throw new \Exception('
+                            You must specify a location before calling
+                            nearbysearch().
+                        ');
                     }
                     elseif (!isset($parameters['radius']))
                     {
                         throw new \Exception('You must specify a radius.');
                     }
-                    elseif (empty($parameters['keyword']) && empty($parameters['name']) && empty($parameters['types']))
+                    elseif (empty($parameters['keyword'])
+                        && empty($parameters['name'])
+                        && empty($parameters['types']))
                     {
-                        throw new \Exception('A Radar Search request must include at least one of keyword, name, or types.');
+                        throw new \Exception('
+                            A Radar Search request must include at least one
+                            of keyword, name, or types.
+                        ');
                     }
 
                     if (isset($parameters['rankby']))
@@ -185,9 +222,13 @@ class GooglePlaces
                     break;
 
                 case 'details':
-                    if (!(isset($parameters['reference']) ^ isset($parameters['placeid'])))
+                    if (!(isset($parameters['reference'])
+                        ^ isset($parameters['placeid'])))
                     {
-                        throw new \Exception('You must specify either a placeid or a reference (but not both) before calling details().');
+                        throw new \Exception('
+                            You must specify either a placeid or a reference
+                            (but not both) before calling details().
+                        ');
                     }
 
                     if (isset($parameters['rankby']))
@@ -198,8 +239,10 @@ class GooglePlaces
                     break;
             }
         }
+
         return $parameters;
     }
+
 
     /**
      * Submits request via curl, sets the response, then returns the response
@@ -225,23 +268,9 @@ class GooglePlaces
             $querystring .= $variable . '=' . $value;
         }
 
-        $curl = curl_init();
+        var_dump($this->client);
 
-        $options = array(
-            CURLOPT_URL            => $url . '?' . $querystring,
-            CURLOPT_HEADER         => false,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_RETURNTRANSFER => true,
-        );
-
-        curl_setopt_array($curl, $options);
-
-        $response = curl_exec($curl);
-
-        if ($error = curl_error($curl))
-        {
-            throw new \Exception('CURL Error: ' . $error);
-        }
+        $response = $this->client->get($url . '?' . $querystring);
 
         if ($this->output == 'json')
         {
@@ -256,8 +285,6 @@ class GooglePlaces
         {
             throw new \Exception('XML is terrible, don\'t use it, ever.');
         }
-
-        curl_close($curl);
 
         $this->response = $response;
 
@@ -285,9 +312,15 @@ class GooglePlaces
      */
     private function subdivide($url, $parameters)
     {
-        if (($this->radius % $this->subradius) || ($this->subradius < 200) || (($this->radius / $this->subradius) % 2))
+        if ($this->radius % $this->subradius
+            || $this->subradius < 200
+            || ($this->radius / $this->subradius) % 2)
         {
-            throw new \Exception('Subradius should divide evenly into radius. Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)');
+            throw new \Exception('
+                Subradius should divide evenly into radius. Also, subradius
+                should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT
+                2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)
+            ');
         }
 
         $center    = explode(',', $this->location);
@@ -313,18 +346,29 @@ class GooglePlaces
 
                 $this->queryGoogle($url, $parameters);
 
-                $this->grid[$i][$j]    = $this->response;
-                $this->grid['results'] = array_merge($this->grid['results'], $this->response['results']);
+                $this->grid[$i][$j] = $this->response;
+
+                $this->grid['results'] = array_merge(
+                    $this->grid['results'],
+                    $this->response['results']
+                );
 
                 while ($this->response['next_page_token'])
                 {
                     $this->pagetoken = $this->response['next_page_token'];
+                    $this->response  = $this->client->get($url, $parameters);
 
-                    $this->queryGoogle($url, $parameters);
+                    $this->grid[$i][$j] = array_merge(
+                        $this->grid[$i][$j],
+                        $this->response
+                    );
 
-                    $this->grid[$i][$j]    = array_merge($this->grid[$i][$j], $this->response);
-                    $this->grid['results'] = array_merge($this->grid['results'], $this->response['results']);
-                    $this->pagetoken       = null;
+                    $this->grid['results'] = array_merge(
+                        $this->grid['results'],
+                        $this->response['results']
+                    );
+
+                    $this->pagetoken = null;
                 }
             }
         }
