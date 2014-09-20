@@ -352,12 +352,12 @@ class GooglePlacesTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException        Exception
-     * @expectedExceptionMessage CURL Error: Could not resolve host: bar
+     * @expectedExceptionMessage CURL Error: Protocol yatp not supported or disabled in libcurl
      */
     public function testClientError()
     {
         $client = new joshtronic\GooglePlacesClient();
-        $client->get('http://foo@bar:google.com');
+        $client->get('yatp://foo@bar');
     }
 }
 
