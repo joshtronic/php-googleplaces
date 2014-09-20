@@ -9,7 +9,7 @@
     "authors": [{
         "name":     "Josh Sherman",
         "email":    "josh@gravityblvd.com",
-        "homepage": "https://github.com/joshtronic/php-googleplaces"
+        "homepage": "http://joshtronic.com"
     }],
     "require": {
         "php": ">=5.3.0"
