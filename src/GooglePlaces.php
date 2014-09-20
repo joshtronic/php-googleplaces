@@ -5,6 +5,7 @@ namespace joshtronic;
 class GooglePlaces
 {
     public  $client    = '';
+    public  $sleep     = 3;
     private $key       = '';
     private $base_url  = 'https://maps.googleapis.com/maps/api/place';
     private $method    = null;
@@ -30,7 +31,7 @@ class GooglePlaces
 
     private $exceptions = array(
         'base_url', 'client', 'exceptions', 'getmax', 'grid', 'method',
-        'output', 'pagetoken', 'response', 'subradius',
+        'output', 'pagetoken', 'response', 'sleep', 'subradius',
     );
 
     public function __construct($key, $client = false)
@@ -48,6 +49,13 @@ class GooglePlaces
 
     public function __call($method, $arguments)
     {
+        $this->output = strtolower($this->output);
+
+        if (!in_array($this->output, array('json', 'xml')))
+        {
+            throw new \Exception('Invalid output, please specify either "json" or "xml".');
+        }
+
         $method     = $this->method = strtolower($method);
         $url        = implode('/', array($this->base_url, $method, $this->output));
         $parameters = array();
@@ -95,16 +103,6 @@ class GooglePlaces
                                 // Just in case it's an associative array
                                 $value = array_values($value);
                                 $value = $value[0] . ',' . $value[1];
-                            }
-                            break;
-
-                        // Checks that the output is value
-                        case 'output':
-                            $value = strtolower($value);
-
-                            if (!in_array($value, array('json', 'xml')))
-                            {
-                                throw new \Exception('Invalid output, please specify either "json" or "xml".');
                             }
                             break;
 
@@ -158,12 +156,12 @@ class GooglePlaces
                                     && !isset($parameters['name'])
                                     && !isset($parameters['types']))
                                 {
-                                    throw new \Exception('You much specify at least one of the following: keyword, name, types.');
+                                    throw new \Exception('You much specify at least one of the following: "keyword", "name", "types".');
                                 }
 
                                 if (isset($parameters['radius']))
                                 {
-                                    unset($parameters['radius']);
+                                    unset($this->radius, $parameters['radius']);
                                 }
                                 break;
 
@@ -191,12 +189,12 @@ class GooglePlaces
                         && empty($parameters['name'])
                         && empty($parameters['types']))
                     {
-                        throw new \Exception('A Radar Search request must include at least one of keyword, name, or types.');
+                        throw new \Exception('You much specify at least one of the following: "keyword", "name", "types".');
                     }
 
                     if (isset($parameters['rankby']))
                     {
-                        unset($parameters['rankby']);
+                        unset($this->rankby, $parameters['rankby']);
                     }
 
                     break;
@@ -205,12 +203,12 @@ class GooglePlaces
                     if (!(isset($parameters['reference'])
                         ^ isset($parameters['placeid'])))
                     {
-                        throw new \Exception('You must specify either a placeid or a reference (but not both) before calling details().');
+                        throw new \Exception('You must specify either a "placeid" or a "reference" (but not both) before calling details().');
                     }
 
                     if (isset($parameters['rankby']))
                     {
-                        unset($parameters['rankby']);
+                        unset($this->rankby, $parameters['rankby']);
                     }
 
                     break;
@@ -229,7 +227,7 @@ class GooglePlaces
         if ($this->pagetoken !== null)
         {
             $parameters['pagetoken'] = $this->pagetoken;
-            sleep(3);
+            sleep($this->sleep);
         }
 
         // Couldn't seem to get http_build_query() to work right so...
@@ -287,17 +285,22 @@ class GooglePlaces
      */
     private function subdivide($url, $parameters)
     {
-        if ($this->radius % $this->subradius
-            || $this->subradius < 200
-            || ($this->radius / $this->subradius) % 2)
+        if ($this->subradius < 200)
         {
-            throw new \Exception('Subradius should divide evenly into radius. Also, subradius should be 200 meters or so. (ex: 2000/200 = 10x10 grid. NOT 2000/33 = 60.6x60.6 grid. NOT 2000/16 = 125x125 grid)');
+            throw new \Exception('Subradius should be at least 200 meters.');
         }
 
-        $center    = explode(',', $this->location);
+        $quotient = $parameters['radius'] / $this->subradius;
+
+        if ($parameters['radius'] % $this->subradius || $quotient % 2)
+        {
+            throw new \Exception('Subradius should divide evenly into radius.');
+        }
+
+        $center    = explode(',', $parameters['location']);
         $centerlat = $center[0];
         $centerlng = $center[1];
-        $count     = $this->radius / $this->subradius;
+        $count     = $quotient;
         $lati      = $this->meters2lat($this->subradius * 2);
 
         $this->grid['results'] = array();
@@ -315,31 +318,28 @@ class GooglePlaces
                 $parameters['location'] = $loc;
                 $parameters['radius']   = $this->subradius;
 
-                $this->queryGoogle($url, $parameters);
+                $pagetoken = true;
 
-                $this->grid[$i][$j] = $this->response;
-
-                $this->grid['results'] = array_merge(
-                    $this->grid['results'],
-                    $this->response['results']
-                );
-
-                while ($this->response['next_page_token'])
+                while ($pagetoken)
                 {
-                    $this->pagetoken = $this->response['next_page_token'];
-                    $this->response  = $this->client->get($url, $parameters);
+                    $this->queryGoogle($url, $parameters);
 
-                    $this->grid[$i][$j] = array_merge(
-                        $this->grid[$i][$j],
-                        $this->response
-                    );
+                    $this->grid[$i][$j] = $this->response;
 
                     $this->grid['results'] = array_merge(
                         $this->grid['results'],
                         $this->response['results']
                     );
 
-                    $this->pagetoken = null;
+                    if (isset($this->response['next_page_token']))
+                    {
+                        $this->pagetoken = $this->response['next_page_token'];
+                    }
+                    else
+                    {
+                        $this->pagetoken = null;
+                        $pagetoken       = false;
+                    }
                 }
             }
         }

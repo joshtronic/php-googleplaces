@@ -2,7 +2,7 @@
 
 namespace joshtronic;
 
-class GooglePlacesClient implements GooglePlacesInterface
+class GooglePlacesClient
 {
     public function get($url)
     {
