@@ -17,6 +17,11 @@ class GooglePlacesClient
 
         curl_setopt_array($curl, $options);
 
+        // Add certificate for Windows
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        }
+
         $response = curl_exec($curl);
 
         if ($error = curl_error($curl))
