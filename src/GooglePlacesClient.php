@@ -8,19 +8,21 @@ class GooglePlacesClient
     {
         $curl = curl_init();
 
+        $ssl_verifypeer = true;
+        // Remove ssl certificate verification for Windows
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+        {
+            $ssl_verifypeer = false;
+        }
+
         $options = array(
             CURLOPT_URL            => $url,
             CURLOPT_HEADER         => false,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYPEER => $ssl_verifypeer,
             CURLOPT_RETURNTRANSFER => true,
         );
 
         curl_setopt_array($curl, $options);
-
-        // Add certificate for Windows
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-        }
 
         $response = curl_exec($curl);
 
