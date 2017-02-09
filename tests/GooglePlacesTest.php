@@ -1,7 +1,10 @@
 <?php
 
+require '../vendor/autoload.php';
+
 require_once '../src/GooglePlaces.php';
 require_once '../src/GooglePlacesClient.php';
+
 
 class GooglePlacesTest extends PHPUnit_Framework_TestCase
 {
