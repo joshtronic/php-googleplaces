@@ -89,6 +89,22 @@ $google_places->reference = '#reference#'; // Reference from search results
 $details                  = $google_places->details();
 ```
 
+### Subradius search
+
+Every method has a `$google_places->subradius` property, as to broad the search into smaller areas and get around Google's results limit of only 60 places per search.
+
+The subradius must be at least 200 meters and must divide evenly into radius (eg. for a `2000` radius, a valid use of the subradius would be `200`, `400`, `1000`; but not `670`, `1100` etc).
+
+Example:
+```php
+$google_places->location  = array(-33.86820, 151.1945860);
+$google_places->radius    = 800;
+$google_places->subradius = 400; // 400m subradius
+$results                  = $google_places->radarSearch();
+```
+
+More details on the subradius here: https://github.com/joshtronic/php-googleplaces/issues/5
+
 ## The Future
 
 The project that I created this library for is now defunct so I’m not actively
