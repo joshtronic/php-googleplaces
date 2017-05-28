@@ -3,6 +3,10 @@
 require_once '../src/GooglePlaces.php';
 require_once '../src/GooglePlacesClient.php';
 
+if (!class_exists('\PHPUnit_Framework_TestCase') && class_exists('\PHPUnit\Framework\TestCase')) {
+    class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
+}
+
 class GooglePlacesTest extends PHPUnit_Framework_TestCase
 {
     private $places;
