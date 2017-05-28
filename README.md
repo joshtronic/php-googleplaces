@@ -1,14 +1,8 @@
 # php-googleplaces
 
-[![Build Status](http://img.shields.io/travis/joshtronic/php-googleplaces.svg?style=flat)][travis]
-[![Coverage Status](http://img.shields.io/coveralls/joshtronic/php-googleplaces.svg?style=flat)][coveralls]
-[![Downloads](http://img.shields.io/packagist/dm/joshtronic/php-googleplaces.svg?style=flat)][packagist]
-[![Gittip](http://img.shields.io/gittip/joshtronic.svg?style=flat)][gittip]
-
-[travis]:    http://travis-ci.org/joshtronic/php-googleplaces
-[coveralls]: https://coveralls.io/r/joshtronic/php-googleplaces
-[packagist]: https://packagist.org/packages/joshtronic/php-googleplaces
-[gittip]:    https://www.gittip.com/joshtronic/
+[![Build Status](https://travis-ci.org/joshtronic/php-googleplaces.svg?branch=master)](https://travis-ci.org/joshtronic/php-googleplaces)
+[![Coverage Status](https://coveralls.io/repos/github/joshtronic/php-googleplaces/badge.svg?branch=master)](https://coveralls.io/github/joshtronic/php-googleplaces?branch=master)
+[![Total Downloads](https://poser.pugx.org/joshtronic/php-googleplaces/downloads)](https://packagist.org/packages/joshtronic/php-googleplaces)
 
 PHP Wrapper for the Google Places API.
 
