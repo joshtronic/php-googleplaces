@@ -19,7 +19,11 @@ class GooglePlacesTest extends PHPUnit_Framework_TestCase
 
     private function clientSetUp($next = false)
     {
-        $client = $this->createMock('GooglePlacesClient', array('get'));
+        if (version_compare(PHPUnit_Runner_Version::id(), '5.4', '<=')) {
+            $client = $this->getMock('GooglePlacesClient', array('get'));
+        } else {
+            $client = $this->createMock('GooglePlacesClient');
+        }
 
         $client
             ->expects($this->once())
