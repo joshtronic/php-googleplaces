@@ -2,6 +2,8 @@
 
 namespace joshtronic;
 
+use SebastianBergmann\Exporter\Exception;
+
 class GooglePlaces
 {
     public  $client    = '';
@@ -24,6 +26,9 @@ class GooglePlaces
     public  $placeid   = null;
     public  $reference = null;
     public  $opennow   = null;
+    //added these for text search.
+    public  $textsearch = null;
+    public  $query = null;
 
     public  $subradius = null;
     public  $getmax    = true;
@@ -212,6 +217,14 @@ class GooglePlaces
                     }
 
                     break;
+
+                //added this for text search
+                case 'textsearch':
+                    if(!isset($parameters['query'])){
+
+                        throw new Exception('You must specify the string you want to search for');
+                    }
+                    break;
             }
         }
 
@@ -240,6 +253,12 @@ class GooglePlaces
                 $querystring .= '&';
             }
 
+            // added this to remove spaces from text search
+            if(preg_match('/\s/',$value)){
+
+                $value = str_replace(' ', '+', $value);
+            }
+
             $querystring .= $variable . '=' . $value;
         }
 
@@ -247,6 +266,7 @@ class GooglePlaces
 
         if ($this->output == 'json')
         {
+
             $response = json_decode($response, true);
 
             if ($response === null)
