@@ -1,3 +1,11 @@
+# 301 Moved Permanently
+
+This repository has moved permanently because I'm no longer using GitHub for my personal projects.
+
+The new location of this code is: https://git.sherver.org/joshtronic/php-googleplaces
+
+---
+
 # php-googleplaces
 
 [![Build Status](http://img.shields.io/travis/joshtronic/php-googleplaces.svg?style=flat)][travis]
